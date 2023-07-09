@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if ! command -v bigloo &> /dev/null
+then
+    echo "bigloo could not be found and is required."
+    echo "Please install bigloo to continue."
+    exit
+fi
+
+bigloo -i configure.scm -- $*

@@ -1,0 +1,13 @@
+#|
+compressed_ports 
+
+Copyright 2023, Joseph Donaldson
+
+|#
+
+(declare-library! 'compressed_ports 
+   :version "@VERSION@"
+   :srfi '(compressed_ports)
+   :basename "compressed_ports"
+   :module-eval 'compressed_ports_make_lib)
+
