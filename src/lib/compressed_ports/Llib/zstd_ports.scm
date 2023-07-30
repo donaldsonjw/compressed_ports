@@ -1,4 +1,5 @@
 (module compressed-ports/zstd-ports
+   (import compressed-ports/java-port-interop)
    (extern
       (include "bgl_zstd.h")
       (type zstd-decompress-stream*
@@ -7,9 +8,6 @@
       (type zstd-compress-stream*
          (opaque)
          "struct zstd_compress_stream *")
-
-      (macro $bgl-zstd-compress-input-remaining?::bbool (zstream::zstd-compress-stream*)
-             "bgl_zstd_compress_input_remaining")
       
       (macro $bgl-zstd-input-buffer-size::long ()
              "bgl_zstd_input_buffer_size")
@@ -20,7 +18,7 @@
       (macro $bgl-zstd-create-decompress-stream::zstd-decompress-stream* ()
              "bgl_zstd_create_decompress_stream")
 
-      (macro $bgl-zstd-create-compress-stream::zstd-compress-stream* (level::int)
+      (macro $bgl-zstd-create-compress-stream::zstd-compress-stream* (level::int output::output-port)
              "bgl_zstd_create_compress_stream")
       
       (macro $bgl-zstd-init::void () "bgl_zstd_init")
@@ -41,6 +39,15 @@
       (macro $bgl-zstd-close-input-stream::obj (zstream::zstd-decompress-stream*)
              "bgl_zstd_close_input_stream"))
 
+   (java      
+      (class $zstd-input-stream::$input-stream
+         (constructor create (::$input-stream))
+         "com.github.luben.zstd.ZstdInputStream")
+      (class $zstd-output-stream::$output-stream
+         (constructor create (::$output-stream ::long))
+         "com.github.luben.zstd.ZstdOutputStream"))
+   
+
    (export
       (input-port->zstd-port::input-port port::input-port
          #!optional (bufinfo #t))
@@ -48,9 +55,8 @@
       (open-input-zstd-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
       (open-output-zstd-file file-name::bstring
-           #!optional (bufinfo #t))))
-
-
+           #!optional (bufinfo #t))
+      (file-zstd?::bbool file::bstring)))
 
 ;; make sure we initialize zstd as a part of module initialization
 (cond-expand
@@ -60,7 +66,7 @@
 
 (cond-expand
    (bigloo-c
-    (define (input-port->zstd-port port::input-port #!optional (bufinfo #t))
+    (define (input-port->zstd-port::input-port port::input-port #!optional (bufinfo #t))
        (let* ((stream ($bgl-zstd-create-decompress-stream))
               (buffer-size ($bgl-zstd-input-buffer-size))
               (buffer (make-string buffer-size))
@@ -98,40 +104,58 @@
                      #unspecified))
           zstd-port)))
    (bigloo-jvm
-    (define (input-port->zstd-port port::input-port #!optional (bufinfo #t))
-       (error "%input-port->zstd-port" "not implemented" #unspecified))))
+    (define (input-port->zstd-port::input-port port::input-port #!optional (bufinfo #t))
+       (let* ((input-port-stream ($input-port-stream-create port))
+              (stream ($zstd-input-stream-create input-port-stream))
+              (buffer (make-string (bit-lsh 1 15)))
+              (proc (lambda ()     
+                       (let loop ()
+                          (let* ((bytes-read ($input-stream-read stream buffer)))
+                             
+                             (cond ((> bytes-read 0)                 
+                                    (string-shrink! buffer bytes-read))
+                                   ((= -1 bytes-read)
+                                    #f)
+                                   (else
+                                    (raise (instantiate::&io-error
+                                              (proc "zstd-input-proc")
+                                              (msg "unknown input state")
+                                              (obj bytes-read)))))))))
+              (zstd-port (open-input-procedure proc bufinfo)))
+        
+          (input-port-close-hook-set! zstd-port
+             (lambda (p) ($input-stream-close stream)
+                #unspecified))
+          zstd-port))))
 
 
 (cond-expand
    (bigloo-c
     (define (output-port->zstd-port::output-port
-               port::output-port)
-      (define (compress-and-write stream s flush)
-          (let loop ((compressed-data ($bgl-zstd-stream-compress stream
-                                         s
-                                         (string-length s)
-                                         flush)))
-             (cond ((string? compressed-data)
-                    (display compressed-data port)
-                    (if ($bgl-zstd-compress-input-remaining? stream)
-                        (loop ($bgl-zstd-stream-compress stream "" 0 #f))))
-                   ((eq? compressed-data 'COMPRESS-CONTINUE)
-                    #unspecified))))
-      
-      (let* ((stream ($bgl-zstd-create-compress-stream 3))
+               port::output-port)      
+      (let* ((stream ($bgl-zstd-create-compress-stream 3 port))
              (writeproc (lambda (s)
-                           (compress-and-write stream s #f)))
+                           ($bgl-zstd-stream-compress stream s (string-length s) #f)))
              (close (lambda ()
-                       (compress-and-write stream "" #t)
+                       ($bgl-zstd-stream-compress stream "" 0 #t)
                        ($bgl-zstd-close-output-stream stream)
                        #t))
              (zstd-port (open-output-procedure writeproc (lambda () #f) #t close)))       
-         zstd-port))) 
-
-       (bigloo-jvm
-        (define (output-port->zstd-port::output-port
-                   port::output-port)
-           (error "output-port->zstd-port" "unimplemented for jvm" #unspecified))))
+         zstd-port)))
+   
+   (bigloo-jvm
+    (define (output-port->zstd-port::output-port
+               port::output-port)
+       (let* ((output-port-stream ($output-port-stream-create port))
+              (stream ($zstd-output-stream-create output-port-stream 3))
+              (writeproc (lambda (s)
+                            ($output-stream-write stream s)))
+              (close (lambda ()
+                        ($output-stream-close stream)
+                        #t))
+              (zstd-port (open-output-procedure writeproc
+                            (lambda () #f) #t close)))
+          zstd-port))))
               
 (define (open-input-zstd-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
@@ -154,3 +178,12 @@
              output-port))))
 
 
+(define (file-zstd?::bbool file::bstring)
+   (with-handler (lambda (e)
+                    #f)
+                 (let ((input (open-input-zstd-file file)))
+                    (if (input-port? input)
+                        (unwind-protect
+                           (begin (read-byte input)
+                                  #t)
+                           (close-input-port input))))))

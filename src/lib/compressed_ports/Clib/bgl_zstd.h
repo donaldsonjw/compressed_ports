@@ -8,7 +8,7 @@ typedef struct zstd_compress_stream* zstd_compress_streamp;
 typedef struct zstd_decompress_stream* zstd_decompress_streamp;
 
 BGL_RUNTIME_DECL zstd_compress_streamp
-bgl_zstd_create_compress_stream(int level);
+bgl_zstd_create_compress_stream(int level, obj_t output);
   
 BGL_RUNTIME_DECL zstd_decompress_streamp
   bgl_zstd_create_decompress_stream();

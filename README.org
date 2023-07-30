@@ -1,0 +1,48 @@
+#+options ^:nil 
+* compressed_ports: Input and Output ports supporting compression/decompression
+
+** Description
+  compressed_ports is a Bigloo library supporting compressed input and
+  output ports. It currentlys supports [[https://www.gnu.org/software/gzip/][gzip]], [[https://tukaani.org/xz/][xz]], and [[https://github.com/facebook/zstd][zstd]]. Both the
+  Bigloo native and jvm backends are supported. It requires a recent
+  version of [[https://github.com/manuel-serrano/bigloo][Bigloo]].
+
+** Building
+  To build, execute:
+
+  #+begin_src shell
+  ./configure --prefix=<installation path prefix>; make
+#+end_src 
+
+  where =<installation path prefix>= is the desired installation path
+  prefix (e.g, =/usr/local=). You usually want the path prefix to match
+  that used by Bigloo itself.
+
+  To build native support, you need the zstd, xz, and zlib
+  libraries and development files installed.
+  
+  To build jvm support, you need [[https://maven.apache.org/][Maven]] installed to pull the xz and
+  zstd jars. Luckily, Gzip support is a part of the Java standard
+  library.
+  
+* Installation
+  To Install, execute:
+
+  #+begin_src shell
+  make install 
+#+end_src 
+
+
+** Tests
+The unit tests depend on [[https://github.com/donaldsonjw/btest][btest]]. It needs to be installed before
+running tests. 
+To run the tests, execute:
+
+  #+begin_src shell
+  make test
+#+end_src
+
+
+* Documentation
+  There is very little documentation outside of the code
+  itself. Better documentation is in the works. 

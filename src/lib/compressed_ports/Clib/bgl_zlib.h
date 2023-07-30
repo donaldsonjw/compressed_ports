@@ -15,7 +15,7 @@ bgl_zlib_create_inflate_stream(obj_t gzip_wrappedp);
 
 
 BGL_RUNTIME_DECL zlib_streamp
-bgl_zlib_create_deflate_stream(int level, obj_t gzip_wrappedp);
+bgl_zlib_create_deflate_stream(int level, obj_t gzip_wrappedp, obj_t output);
 
 BGL_RUNTIME_DECL obj_t
 bgl_zlib_stream_inflate(zlib_streamp zstream,
@@ -33,4 +33,4 @@ BGL_RUNTIME_DECL obj_t
 bgl_zlib_close_output_stream(zlib_streamp zstream);
 
 
-#endif /* BGL_GZIP_H */ 
+#endif /* BGL_ZLIB_H */ 

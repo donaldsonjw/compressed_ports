@@ -6,12 +6,13 @@
 # This is the project version
 # It will be used in setting the version information in library init files
 # as well as used in the name of generated libraries
-VERSION = 0.1
+VERSION = 0.5
 
 # Build Tools
 BIGLOO = bigloo
 CC := $(shell $(BIGLOO) -eval "(print (bigloo-config 'c-compiler)) (exit 0)" -q)
-JAVAC = javac 
+JAVAC = javac
+MAVEN = mvn
 BGLAFILE = bglafile
 BGLJFILE = bgljfile
 BGLTAGS = bgltags
@@ -71,7 +72,7 @@ ZIP_EXT = zip
 VARIANT_SUFFIXES:=s u p
 
 # BIGLOO compiler flags
-BFLAGS_COMMON = -O6 -q -afile $(AFILE) -mkaddlib -fsharing -freturn-goto
+BFLAGS_COMMON = -O6 -q -afile $(AFILE) -mkaddlib -fsharing -freturn-goto -fstackable -jvm-catch-errors   
 BFLAGS_u = $(BFLAGS_COMMON) -unsafe -cgen
 BFLAGS_s = $(BFLAGS_COMMON)
 BFLAGS_p = $(BFLAGS_COMMON) -p
@@ -84,7 +85,7 @@ BLFLAGS_s = $(BLFLAGS_COMMON)
 BLFLAGS_p = $(BLFLAGS_COMMON)
 
 #Add BIGLOO libraries (e.g., -lpthread)
-BLDFLAGS_COMMON = -lz -lzstd
+BLDFLAGS_COMMON = -lz -lzstd -llzma 
 BLDFLAGS_u = $(BLDFLAGS_COMMON)
 BLDFLAGS_s = $(BLDFLAGS_COMMON)
 BLDFLAGS_p = $(BLDFLAGS_COMMON)
@@ -99,8 +100,8 @@ BCFLAGS_p = $(BCFLAGS_COMMON)
 CFLAGS += -I $(BIGLOO_LIB_DIR) -fPIC
 
 # Additional java libraries should be added here
-CLASSPATH_COMMON =
-CLASSPATH_u = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_u.zip:
+CLASSPATH_COMMON = $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar:$(BUILD_LIB_DIR)/xz-1.9.jar
+CLASSPATH_u = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_u.zip
 CLASSPATH_s = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_s.zip
 CLASSPATH_p = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_p.zip
 
@@ -302,7 +303,7 @@ LIB_$2_BLDFLAGS_$1 += $$(BLDFLAGS_$1)
 
 .Olib_$1/lib/$2/%.o: $(SRC_DIR)/lib/$2/%.scm
 	@if [ ! -d "$$(@D)" ]; then  mkdir -p $$(@D); fi
-	@$$(BIGLOO) $$(LIB_$2_BFLAGS_$1) $$(LIB_$2_BCFLAGS_$1:%=-copt %) $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$(LIB_$2_C_INCLUDE_DIRS:%=-copt " -I %") $$< -o $$@ -c
+	$$(BIGLOO) $$(LIB_$2_BFLAGS_$1) $$(LIB_$2_BCFLAGS_$1:%=-copt %) $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$(LIB_$2_C_INCLUDE_DIRS:%=-copt " -I %") $$< -o $$@ -c
 
 .class_$1/bigloo/lib/$2/%.class: $(SRC_DIR)/lib/$2/%.scm
 	@if [ ! -d "$$(@D)" ]; then  mkdir -p $$(@D); fi
@@ -404,9 +405,9 @@ release: .etags .bee $(RELEASE_TARGETS)
 
 release_bins: release_libs $(RELEASE_BINS)
 
-release_jbins: release_zips $(RELEASE_JBINS)
+release_jbins: release_zips $(RELEASE_JBINS) $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar
 
-unsafe_jbins: $(UNSAFE_JBINS)
+unsafe_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(UNSAFE_JBINS) 
 
 unsafe_bins: $(UNSAFE_BINS)
 
@@ -416,11 +417,11 @@ profile_jbins: $(PROFILE_JBINS)
 
 release_libs: $(RELEASE_LIBS)
 
-release_zips: $(RELEASE_ZIPS)
+release_zips: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(RELEASE_ZIPS) 
 
 test_bins: $(TEST_BINS) 
 
-test_jbins: $(TEST_JBINS)
+test_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(TEST_JBINS)  
 
 define run_tests
 	(TEST_FAILED=0;\
@@ -440,7 +441,7 @@ endef
 test_native: $(TEST_BINS)
 	@$(call run_tests,$(TEST_BINS))
 
-test_jvm: $(TEST_JBINS)
+test_jvm: $(TEST_JBINS) $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar
 	@$(call run_tests,$(TEST_JBINS))
 
 ACTIVE_TESTS=
@@ -452,6 +453,12 @@ ifeq ($(SUPPORT_JVM),true)
 endif
 
 test: $(ACTIVE_TESTS)
+
+$(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar:
+	@($(MAVEN) -q dependency:get -Ddest="$(@D)" -Dartifact=com.github.luben:zstd-jni:1.5.5-4) 
+
+$(BUILD_LIB_DIR)/xz-1.9.jar:
+	@($(MAVEN) -q dependency:get -Ddest="$(@D)" -Dartifact=org.tukaani:xz:1.9)
 
 define java_bin_classes_rule
 ifneq ($$($1_JAVA_CLASSES_$2),)
@@ -611,7 +618,7 @@ $(JFILE): $(SCM_SRC)
         $(call find_files,$(SRC_DIR),'*.sch') \
         $(call find_files,$(SRC_DIR),'*.c') \
         $(call find_files,$(SRC_DIR),'*.java') 
-	@$(BGLTAGS) -o $@ $^
+	$(BGLTAGS) -o $@ $^
 
 .bee:
 	touch $@

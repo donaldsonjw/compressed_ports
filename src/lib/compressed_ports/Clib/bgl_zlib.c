@@ -8,14 +8,14 @@ BGL_IMPORT obj_t string_append(obj_t, obj_t);
 
 static obj_t INFLATE_CONTINUE = BUNSPEC;
 static obj_t INFLATE_DONE = BUNSPEC;
-static obj_t DEFLATE_CONTINUE = BUNSPEC;
-static obj_t DEFLATE_DONE = BUNSPEC;
 static obj_t ZLIB = BUNSPEC;
 static obj_t DEFLATE = BUNSPEC;
 static obj_t GZIP = BUNSPEC;
 
 struct zlib_stream {
   z_stream stream;
+  // only used for output deflate ports 
+  obj_t output;
   unsigned char buffer[BGL_ZLIB_CHUNK_SIZE];
 };
 
@@ -25,8 +25,6 @@ BGL_RUNTIME_DEF void bgl_zlib_init() {
     initialized = 1;
     INFLATE_DONE = string_to_symbol("INFLATE-DONE");
     INFLATE_CONTINUE = string_to_symbol("INFLATE-CONTINUE");
-    DEFLATE_CONTINUE = string_to_symbol("DEFLATE-CONTINUE");
-    DEFLATE_DONE = string_to_symbol("DEFLATE-DONE");
     ZLIB = string_to_symbol("ZLIB");
     DEFLATE = string_to_symbol("DEFLATE");
     GZIP = string_to_symbol("GZIP");
@@ -51,7 +49,10 @@ bgl_zlib_create_inflate_stream(obj_t zlib_format) {
   } else {
     window_bits = 15;
   }
- 
+
+  // only used for compression deflate output streams 
+  zstream->output = BUNSPEC;
+  
   zstream->stream.zalloc = Z_NULL; 
   zstream->stream.zfree = Z_NULL;
   zstream->stream.opaque = Z_NULL;
@@ -72,7 +73,7 @@ bgl_zlib_create_inflate_stream(obj_t zlib_format) {
 }
 
 BGL_RUNTIME_DEF zlib_streamp
-bgl_zlib_create_deflate_stream(int level, obj_t zlib_format) {
+bgl_zlib_create_deflate_stream(int level, obj_t zlib_format, obj_t output) {
   zlib_streamp zstream = (zlib_streamp) GC_MALLOC(sizeof(struct zlib_stream));
 
   /* we indicate to zlib that we are dealing with a gzip wrapped data
@@ -89,6 +90,8 @@ bgl_zlib_create_deflate_stream(int level, obj_t zlib_format) {
   } else {
     window_bits = 15;
   }
+
+  zstream->output = output;
   
   zstream->stream.zalloc = Z_NULL;
   zstream->stream.zfree = Z_NULL;
@@ -170,33 +173,26 @@ bgl_zlib_stream_deflate(zlib_streamp zstream, unsigned char* buffer, long length
 
   int flush = finishp == BTRUE ? Z_FINISH : Z_NO_FLUSH;
   
-  if (length > 0 || finishp == BTRUE) {
-    zstream->stream.next_in = buffer;
-    zstream->stream.avail_in = length;
-  }
-  
-  zstream->stream.avail_out = BGL_ZLIB_CHUNK_SIZE;
-  zstream->stream.next_out = zstream->buffer;
-  
-  int ret = deflate(&(zstream->stream), flush);
-  
-  if (Z_BUF_ERROR == ret) {
-    return DEFLATE_CONTINUE;
-  }
-  
-  if (!(Z_OK == ret || Z_STREAM_END == ret)) {
-    C_SYSTEM_FAILURE(BGL_IO_WRITE_ERROR,
-                     "bgl_zlib_stream_deflate",
-                     zstream->stream.msg,
-                     BINT(ret));
-  }
+  zstream->stream.next_in = buffer;
+  zstream->stream.avail_in = length;
 
-  int have = BGL_ZLIB_CHUNK_SIZE - zstream->stream.avail_out; 
-  if (Z_STREAM_END == ret  && have == 0) {
-    res = DEFLATE_DONE;
-  } else {
-    res = string_to_bstring_len(zstream->buffer, have);
-  }
+  do {
+    zstream->stream.avail_out = BGL_ZLIB_CHUNK_SIZE;
+    zstream->stream.next_out = zstream->buffer;
+    
+    int ret = deflate(&(zstream->stream), flush);
+
+    if (!(Z_OK == ret || Z_STREAM_END == ret)) {
+      C_SYSTEM_FAILURE(BGL_IO_WRITE_ERROR,
+                       "bgl_zlib_stream_deflate",
+                       zstream->stream.msg,
+                       BINT(ret));
+    }
+    
+    int have = BGL_ZLIB_CHUNK_SIZE - zstream->stream.avail_out;
+    bgl_write(zstream->output, zstream->buffer, have);
+
+  } while (zstream->stream.avail_out == 0);
   
   return res;
 }
