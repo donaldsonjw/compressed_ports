@@ -1,4 +1,4 @@
-#+options ^:nil 
+#+options: ^:nil 
 * compressed_ports: Input and Output ports supporting compression/decompression
 
 ** Description
