@@ -32,13 +32,13 @@
                                               length::long)
              "bgl_xz_stream_decompress")
 
-      (macro $bgl-xz-close-input-stream::obj
+      (macro $bgl-xz-close-decompress-stream::obj
          (stream::xz-decompress-stream*)
-         "bgl_xz_close_input_stream")
+         "bgl_xz_close_decompress_stream")
 
-      (macro $bgl-xz-close-output-stream::obj
+      (macro $bgl-xz-close-compress-stream::obj
          (stream::xz-compress-stream*)
-         "bgl_xz_close_output_stream"))
+         "bgl_xz_close_compress_stream"))
 
    (java
       (abstract-class $filter-options
@@ -78,7 +78,7 @@
                            ($bgl-xz-stream-compress stream s (string-length s) #f)))
              (close (lambda ()
                        ($bgl-xz-stream-compress stream "" 0 #t)
-                       ($bgl-xz-close-output-stream stream)
+                       ($bgl-xz-close-compress-stream stream)
                        #t))
              (xz-port (open-output-procedure writeproc (lambda () #f) #t close)))       
          xz-port)))
@@ -133,7 +133,7 @@
               (xz-port (open-input-procedure proc bufinfo)))
 
           (input-port-close-hook-set! xz-port
-             (lambda (p) ($bgl-xz-close-input-stream stream)
+             (lambda (p) ($bgl-xz-close-decompress-stream stream)
                      #unspecified))
           xz-port)))
    (bigloo-jvm

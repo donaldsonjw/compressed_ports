@@ -25,10 +25,10 @@ bgl_zstd_stream_decompress(zstd_decompress_streamp zstream,
                            unsigned char *buffer, long length);
 
 BGL_RUNTIME_DECL obj_t
-bgl_zstd_close_input_stream(zstd_decompress_streamp zstream);
+bgl_zstd_close_decompress_stream(zstd_decompress_streamp zstream);
 
 BGL_RUNTIME_DECL obj_t
-bgl_zstd_close_output_stream(zstd_compress_streamp zstream);
+bgl_zstd_close_compress_stream(zstd_compress_streamp zstream);
 
 BGL_RUNTIME_DECL long
 bgl_zstd_input_buffer_size();

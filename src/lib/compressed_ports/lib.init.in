@@ -13,4 +13,7 @@ Copyright 2023, Joseph Donaldson
 
 (cond-expand
   (bigloo-compile
-    (set! *additional-bigloo-zips* (cons* "zstd-jni-1.5.5-4.jar" "xz-1.9.jar" *additional-bigloo-zips*))))
+   (set! *additional-bigloo-zips* (cons* "zstd-jni-1.5.5-4.jar"
+                                     "xz-1.9.jar"
+                                     "bzip2-0.9.1.jar"
+                                     *additional-bigloo-zips*))))

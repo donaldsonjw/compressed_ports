@@ -17,10 +17,10 @@
                                               finish?::bbool)
              "bgl_zlib_stream_deflate")
       (macro $bgl-zlib-init::void () "bgl_zlib_init")
-      (macro $bgl-zlib-close-input-stream::obj (stream::zlib-stream*)
-         "bgl_zlib_close_input_stream")
-      (macro $bgl-zlib-close-output-stream::obj (stream::zlib-stream*)
-         "bgl_zlib_close_output_stream"))
+      (macro $bgl-zlib-close-decompress-stream::obj (stream::zlib-stream*)
+         "bgl_zlib_close_decompress_stream")
+      (macro $bgl-zlib-close-compress-stream::obj (stream::zlib-stream*)
+         "bgl_zlib_close_compress_stream"))
 
    (java
       (class $inflater
@@ -43,27 +43,27 @@
          "java.util.zip.GZIPOutputStream"))
    
    (export 
-           (input-port->zlib-port::input-port port::input-port
-              #!optional (bufinfo #t))
-           (input-port->gzip-port::input-port port::input-port
-              #!optional (bufinfo #t))
-           (input-port->inflate-port::input-port port::input-port
-              #!optional (bufinfo #t))
-           (output-port->zlib-port::output-port port::output-port)
-           (output-port->gzip-port::output-port port::output-port)
-           (output-port->deflate-port::output-port port::output-port)
-           (open-input-gzip-file file-name::bstring
-           #!optional (bufinfo #t) (timeout 1000000))
-           (open-input-inflate-file file-name::bstring
-           #!optional (bufinfo #t) (timeout 1000000))
-           (open-input-zlib-file file-name::bstring
-           #!optional (bufinfo #t) (timeout 1000000))
-           (open-output-gzip-file file-name::bstring #!optional (bufinfo #t))
-           (open-output-deflate-file file-name::bstring #!optional (bufinfo #t))
-           (open-output-zlib-file file-name::bstring #!optional (bufinfo #t))
-           (file-gzip?::bbool file::bstring)
-           (file-deflate?::bbool file::bstring)
-           (file-zlib?::bbool file::bstring)))
+      (input-port->zlib-port::input-port port::input-port
+         #!optional (bufinfo #t))
+      (input-port->gzip-port::input-port port::input-port
+         #!optional (bufinfo #t))
+      (input-port->inflate-port::input-port port::input-port
+         #!optional (bufinfo #t))
+      (output-port->zlib-port::output-port port::output-port)
+      (output-port->gzip-port::output-port port::output-port)
+      (output-port->deflate-port::output-port port::output-port)
+      (open-input-gzip-file file-name::bstring
+         #!optional (bufinfo #t) (timeout 1000000))
+      (open-input-inflate-file file-name::bstring
+         #!optional (bufinfo #t) (timeout 1000000))
+      (open-input-zlib-file file-name::bstring
+         #!optional (bufinfo #t) (timeout 1000000))
+      (open-output-gzip-file file-name::bstring #!optional (bufinfo #t))
+      (open-output-deflate-file file-name::bstring #!optional (bufinfo #t))
+      (open-output-zlib-file file-name::bstring #!optional (bufinfo #t))
+      (file-gzip?::bbool file::bstring)
+      (file-deflate?::bbool file::bstring)
+      (file-zlib?::bbool file::bstring)))
 
 
 (define +zlib-compressed-formats+ '(GZIP ZLIB DEFLATE))
@@ -114,7 +114,7 @@
               (zlib-port (open-input-procedure proc bufinfo)))
           
           (input-port-close-hook-set! zlib-port
-             (lambda (p) ($bgl-zlib-close-input-stream stream)
+             (lambda (p) ($bgl-zlib-close-decompress-stream stream)
                 #unspecified))
           zlib-port)))
    (bigloo-jvm
@@ -180,7 +180,7 @@
                                #f)))
               (close (lambda ()
                         ($bgl-zlib-stream-deflate stream "" 0 #t)
-                        ($bgl-zlib-close-output-stream stream)
+                        ($bgl-zlib-close-compress-stream stream)
                         #t))
               (zlib-port (open-output-procedure writeproc (lambda () #f) #t close)))       
           zlib-port)))

@@ -114,14 +114,14 @@ bgl_zlib_create_deflate_stream(int level, obj_t zlib_format, obj_t output) {
 }
 
 BGL_RUNTIME_DEF obj_t
-bgl_zlib_close_input_stream(zlib_streamp zstream) {
+bgl_zlib_close_decompress_stream(zlib_streamp zstream) {
   inflateEnd(&(zstream->stream));
   return BUNSPEC;
 }
 
 
 BGL_RUNTIME_DEF obj_t
-bgl_zlib_close_output_stream(zlib_streamp zstream) {
+bgl_zlib_close_compress_stream(zlib_streamp zstream) {
   deflateEnd(&(zstream->stream));
   return BUNSPEC;
 }

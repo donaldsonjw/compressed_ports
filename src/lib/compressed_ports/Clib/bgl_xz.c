@@ -149,7 +149,7 @@ bgl_xz_stream_decompress(xz_decompress_streamp stream, unsigned char *buffer,
   ret = lzma_code(&(stream->strm), LZMA_RUN);
   
   if (!(LZMA_OK == ret || LZMA_STREAM_END == ret)) {
-    bgl_xz_error("bgl_cx_stream_decompress", ret);
+    bgl_xz_error("bgl_xz_stream_decompress", ret);
   }
   
   available = BUFSIZ - stream->strm.avail_out;
@@ -166,13 +166,13 @@ bgl_xz_stream_decompress(xz_decompress_streamp stream, unsigned char *buffer,
 }
 
 BGL_RUNTIME_DEF obj_t
-bgl_xz_close_output_stream(xz_compress_streamp stream) {
+bgl_xz_close_compress_stream(xz_compress_streamp stream) {
   lzma_end(&(stream->strm));
   return BUNSPEC;
 }
 
 BGL_RUNTIME_DEF obj_t
-bgl_xz_close_input_stream(xz_decompress_streamp stream) {
+bgl_xz_close_decompress_stream(xz_decompress_streamp stream) {
   lzma_end(&(stream->strm));
   return BUNSPEC;
 }

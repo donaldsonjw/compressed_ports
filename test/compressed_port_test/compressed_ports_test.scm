@@ -85,6 +85,31 @@
    )
 
 
+(define-test-suite bzip2-suite
+
+   (test "file-bzip2? works"
+      (assert-true (file-bzip2? "test_files/orgs.csv.bz2"))
+      (assert-false (file-bzip2? "test_files/orgs.csv.gz")))
+
+   
+   (test "bzip2 compressing and decompressing returns orginal value"
+      (let* ((test-string "a string to compress yay yay yay")
+            (out-string (open-output-string))
+            (output (output-port->bzip2-port out-string)))
+         (display test-string output)
+         (close-output-port output)
+         (let* ((compressed-data (get-output-string out-string))
+               (input (input-port->bzip2-port (open-input-string compressed-data))))
+            (assert-equal? (read-string input) test-string)
+            (close-input-port input))))
+   
+   (test "input from bzip2 file works"
+      (let* ((input (open-input-bzip2-file "test_files/orgs.csv.bz2"))
+             (last-line (read-last-line input)))
+         (assert-equal? last-line +org-csv-last-line+)
+         (close-input-port input))))
+
+
 (define-test-suite zstd-suite
 
    (test "file-zstd? works"
@@ -135,6 +160,7 @@
 
 
 (suite-add-subsuite! compressed-ports-suite zlib-suite)
+(suite-add-subsuite! compressed-ports-suite bzip2-suite)
 (suite-add-subsuite! compressed-ports-suite zstd-suite)
 (suite-add-subsuite! compressed-ports-suite xz-suite)
 

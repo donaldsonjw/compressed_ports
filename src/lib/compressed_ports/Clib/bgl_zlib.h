@@ -27,10 +27,10 @@ bgl_zlib_stream_deflate(zlib_streamp zstream, unsigned char* buffer, long length
                         obj_t finishp);
 
 BGL_RUNTIME_DECL obj_t
-bgl_zlib_close_input_stream(zlib_streamp zstream);
+bgl_zlib_close_decompress_stream(zlib_streamp zstream);
 
 BGL_RUNTIME_DECL obj_t
-bgl_zlib_close_output_stream(zlib_streamp zstream);
+bgl_zlib_close_compress_stream(zlib_streamp zstream);
 
 
 #endif /* BGL_ZLIB_H */ 

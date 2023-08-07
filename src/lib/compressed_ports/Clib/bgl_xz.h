@@ -23,9 +23,9 @@ BGL_RUNTIME_DECL obj_t bgl_xz_stream_decompress(xz_decompress_streamp stream,
                                                 unsigned char *buffer,
                                                 long length);
 
-BGL_RUNTIME_DECL obj_t bgl_xz_close_output_stream(xz_compress_streamp stream);
+BGL_RUNTIME_DECL obj_t bgl_xz_close_compress_stream(xz_compress_streamp stream);
 
 BGL_RUNTIME_DECL obj_t
-bgl_xz_close_input_stream(xz_decompress_streamp stream);
+bgl_xz_close_decompress_stream(xz_decompress_streamp stream);
 
 #endif /* BGL_XZ_H */ 

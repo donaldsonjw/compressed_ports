@@ -34,10 +34,10 @@
                                                finish?::bbool)
              "bgl_zstd_stream_compress")
 
-      (macro $bgl-zstd-close-output-stream::obj (zstream::zstd-compress-stream*)
-             "bgl_zstd_close_output_stream")
-      (macro $bgl-zstd-close-input-stream::obj (zstream::zstd-decompress-stream*)
-             "bgl_zstd_close_input_stream"))
+      (macro $bgl-zstd-close-compress-stream::obj (zstream::zstd-compress-stream*)
+             "bgl_zstd_close_compress_stream")
+      (macro $bgl-zstd-close-decompress-stream::obj (zstream::zstd-decompress-stream*)
+             "bgl_zstd_close_decompress_stream"))
 
    (java      
       (class $zstd-input-stream::$input-stream
@@ -100,7 +100,7 @@
               (zstd-port (open-input-procedure proc bufinfo)))
 
           (input-port-close-hook-set! zstd-port
-             (lambda (p) ($bgl-zstd-close-input-stream stream)
+             (lambda (p) ($bgl-zstd-close-decompress-stream stream)
                      #unspecified))
           zstd-port)))
    (bigloo-jvm
@@ -138,7 +138,7 @@
                            ($bgl-zstd-stream-compress stream s (string-length s) #f)))
              (close (lambda ()
                        ($bgl-zstd-stream-compress stream "" 0 #t)
-                       ($bgl-zstd-close-output-stream stream)
+                       ($bgl-zstd-close-compress-stream stream)
                        #t))
              (zstd-port (open-output-procedure writeproc (lambda () #f) #t close)))       
          zstd-port)))

@@ -85,7 +85,7 @@ BLFLAGS_s = $(BLFLAGS_COMMON)
 BLFLAGS_p = $(BLFLAGS_COMMON)
 
 #Add BIGLOO libraries (e.g., -lpthread)
-BLDFLAGS_COMMON = -lz -lzstd -llzma 
+BLDFLAGS_COMMON = -lz -lzstd -llzma -lbz2
 BLDFLAGS_u = $(BLDFLAGS_COMMON)
 BLDFLAGS_s = $(BLDFLAGS_COMMON)
 BLDFLAGS_p = $(BLDFLAGS_COMMON)
@@ -100,7 +100,7 @@ BCFLAGS_p = $(BCFLAGS_COMMON)
 CFLAGS += -I $(BIGLOO_LIB_DIR) -fPIC
 
 # Additional java libraries should be added here
-CLASSPATH_COMMON = $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar:$(BUILD_LIB_DIR)/xz-1.9.jar
+CLASSPATH_COMMON = $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar:$(BUILD_LIB_DIR)/xz-1.9.jar:$(BUILD_LIB_DIR)/bzip2-0.9.1.jar
 CLASSPATH_u = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_u.zip
 CLASSPATH_s = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_s.zip
 CLASSPATH_p = $(CLASSPATH_COMMON):$(BIGLOO_LIB_DIR)/bigloo_p.zip
@@ -405,9 +405,9 @@ release: .etags .bee $(RELEASE_TARGETS)
 
 release_bins: release_libs $(RELEASE_BINS)
 
-release_jbins: release_zips $(RELEASE_JBINS) $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar
+release_jbins: release_zips $(RELEASE_JBINS) $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/bzip2-0.9.1.jar
 
-unsafe_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(UNSAFE_JBINS) 
+unsafe_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(UNSAFE_JBINS) $(BUILD_LIB_DIR)/bzip2-0.9.1.jar
 
 unsafe_bins: $(UNSAFE_BINS)
 
@@ -417,11 +417,11 @@ profile_jbins: $(PROFILE_JBINS)
 
 release_libs: $(RELEASE_LIBS)
 
-release_zips: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(RELEASE_ZIPS) 
+release_zips: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/bzip2-0.9.1.jar $(RELEASE_ZIPS) 
 
 test_bins: $(TEST_BINS) 
 
-test_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(TEST_JBINS)  
+test_jbins: $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/bzip2-0.9.1.jar $(TEST_JBINS)  
 
 define run_tests
 	(TEST_FAILED=0;\
@@ -441,7 +441,7 @@ endef
 test_native: $(TEST_BINS)
 	@$(call run_tests,$(TEST_BINS))
 
-test_jvm: $(TEST_JBINS) $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar
+test_jvm: $(TEST_JBINS) $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar $(BUILD_LIB_DIR)/xz-1.9.jar $(BUILD_LIB_DIR)/bzip2-0.9.1.jar
 	@$(call run_tests,$(TEST_JBINS))
 
 ACTIVE_TESTS=
@@ -459,6 +459,9 @@ $(BUILD_LIB_DIR)/zstd-jni-1.5.5-4.jar:
 
 $(BUILD_LIB_DIR)/xz-1.9.jar:
 	@($(MAVEN) -q dependency:get -Ddest="$(@D)" -Dartifact=org.tukaani:xz:1.9)
+
+$(BUILD_LIB_DIR)/bzip2-0.9.1.jar:
+	@($(MAVEN) -q dependency:get -Ddest="$(@D)" -Dartifact=org.itadaki:bzip2:0.9.1)
 
 define java_bin_classes_rule
 ifneq ($$($1_JAVA_CLASSES_$2),)
