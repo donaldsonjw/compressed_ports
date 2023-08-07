@@ -3,7 +3,7 @@
 
 ** Description
   compressed_ports is a Bigloo library supporting compressed input and
-  output ports. It currentlys supports [[https://www.gnu.org/software/gzip/][gzip]], [[https://tukaani.org/xz/][xz]], and [[https://github.com/facebook/zstd][zstd]]. Both the
+  output ports. It currentlys supports [[https://www.gnu.org/software/gzip/][gzip]], [[https://sourceware.org/bzip2/][bzip2]], [[https://tukaani.org/xz/][xz]], and [[https://github.com/facebook/zstd][zstd]]. Both the
   Bigloo native and jvm backends are supported. It requires a recent
   version of [[https://github.com/manuel-serrano/bigloo][Bigloo]].
 
