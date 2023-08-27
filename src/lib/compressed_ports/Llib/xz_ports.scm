@@ -54,13 +54,15 @@
          (constructor create (::$output-stream ::$filter-options))
          "org.tukaani.xz.XZOutputStream"))
    (export
-      (output-port->xz-port::output-port port::output-port)
+      (output-port->xz-port::output-port port::output-port #!optional (bufinfo #t))
       (input-port->xz-port::input-port port::input-port #!optional (bufinfo #t))
       (open-output-xz-file file-name::bstring
            #!optional (bufinfo #t))
       (open-input-xz-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
-      (file-xz?::bbool file::bstring)))
+      (file-xz?::bbool file::bstring)
+      (open-input-xz-port in::input-port #!optional (bufinfo #t))
+      (open-output-xz-port out::output-port #!optional (bufinfo #t))))
 
 
 ;; make sure we initialize xz as a part of module initialization
@@ -72,7 +74,7 @@
 
 (cond-expand
    (bigloo-c
-    (define (output-port->xz-port::output-port port::output-port)
+    (define (output-port->xz-port::output-port port::output-port #!optional (bufinfo #t))
        (let* ((stream ($bgl-xz-create-compress-stream 6 port))
              (writeproc (lambda (s)
                            ($bgl-xz-stream-compress stream s (string-length s) #f)))
@@ -80,10 +82,10 @@
                        ($bgl-xz-stream-compress stream "" 0 #t)
                        ($bgl-xz-close-compress-stream stream)
                        #t))
-             (xz-port (open-output-procedure writeproc (lambda () #f) #t close)))       
+             (xz-port (open-output-procedure writeproc (lambda () #f) bufinfo close)))       
          xz-port)))
    (bigloo-jvm
-    (define (output-port->xz-port::output-port port::output-port)
+    (define (output-port->xz-port::output-port port::output-port #!optional (bufinfo #t))
          (let* ((output-port-stream ($output-port-stream-create port))
                 (stream ($xz-output-stream-create output-port-stream
                            ($lzma2-options-create)))
@@ -93,7 +95,7 @@
                         ($output-stream-close stream)
                         #t))
               (xz-port (open-output-procedure writeproc
-                            (lambda () #f) #t close)))
+                            (lambda () #f) bufinfo close)))
             xz-port))))
 
 
@@ -164,7 +166,7 @@
 
 (define (open-output-xz-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out (open-output-file file-name bufinfo)))
+   (let ((out::output-port (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->xz-port out)))
              (output-port-close-hook-set! output-port
@@ -191,3 +193,10 @@
                            (begin (read-byte input)
                                   #t)
                            (close-input-port input))))))
+(define (open-input-xz-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-xz-port" bufinfo c-default-io-bufsiz)))
+      (input-port->xz-port in buf)))
+
+(define (open-output-xz-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-xz-port" bufinfo c-default-io-bufsiz)))
+      (output-port->xz-port out buf)))

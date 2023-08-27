@@ -51,12 +51,14 @@
    (export
       (input-port->zstd-port::input-port port::input-port
          #!optional (bufinfo #t))
-      (output-port->zstd-port::output-port port::output-port)
+      (output-port->zstd-port::output-port port::output-port #!optional (bufinfo #t))
       (open-input-zstd-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
       (open-output-zstd-file file-name::bstring
            #!optional (bufinfo #t))
-      (file-zstd?::bbool file::bstring)))
+      (file-zstd?::bbool file::bstring)
+      (open-input-zstd-port in::input-port #!optional (bufinfo #t))
+      (open-output-zstd-port out::output-port #!optional (bufinfo #t))))
 
 ;; make sure we initialize zstd as a part of module initialization
 (cond-expand
@@ -132,7 +134,7 @@
 (cond-expand
    (bigloo-c
     (define (output-port->zstd-port::output-port
-               port::output-port)      
+               port::output-port #!optional (bufinfo #t))      
       (let* ((stream ($bgl-zstd-create-compress-stream 3 port))
              (writeproc (lambda (s)
                            ($bgl-zstd-stream-compress stream s (string-length s) #f)))
@@ -140,12 +142,12 @@
                        ($bgl-zstd-stream-compress stream "" 0 #t)
                        ($bgl-zstd-close-compress-stream stream)
                        #t))
-             (zstd-port (open-output-procedure writeproc (lambda () #f) #t close)))       
+             (zstd-port (open-output-procedure writeproc (lambda () #f) bufinfo close)))       
          zstd-port)))
    
    (bigloo-jvm
     (define (output-port->zstd-port::output-port
-               port::output-port)
+               port::output-port #!optional (bufinfo #t))
        (let* ((output-port-stream ($output-port-stream-create port))
               (stream ($zstd-output-stream-create output-port-stream 3))
               (writeproc (lambda (s)
@@ -154,7 +156,7 @@
                         ($output-stream-close stream)
                         #t))
               (zstd-port (open-output-procedure writeproc
-                            (lambda () #f) #t close)))
+                            (lambda () #f) bufinfo close)))
           zstd-port))))
               
 (define (open-input-zstd-file file-name::bstring
@@ -170,7 +172,7 @@
 
 (define (open-output-zstd-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out (open-output-file file-name bufinfo)))
+   (let ((out::output-port (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->zstd-port out)))
              (output-port-close-hook-set! output-port
@@ -187,3 +189,11 @@
                            (begin (read-byte input)
                                   #t)
                            (close-input-port input))))))
+
+(define (open-input-zstd-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-zstd-port" bufinfo c-default-io-bufsiz)))
+      (input-port->zstd-port in buf)))
+
+(define (open-output-zstd-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-zstd-port" bufinfo c-default-io-bufsiz)))
+      (output-port->zstd-port out buf)))

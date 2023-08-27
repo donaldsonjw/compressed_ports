@@ -9,7 +9,8 @@ Copyright 2023, Joseph Donaldson
     (import compressed-ports/zlib-ports
             compressed-ports/zstd-ports
             compressed-ports/xz-ports
-            compressed-ports/bzip2-ports 
+            compressed-ports/bzip2-ports
+            compressed-ports/lz4-ports
             compressed-ports/java-port-interop)
     (eval (export-all)))
 

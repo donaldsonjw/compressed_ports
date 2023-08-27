@@ -50,12 +50,14 @@
 
    (export
       (input-port->bzip2-port::input-port port::input-port #!optional (bufinfo #t))
-      (output-port->bzip2-port::output-port port::output-port)
+      (output-port->bzip2-port::output-port port::output-port #!optional (bufinfo #t))
       (open-input-bzip2-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
       (file-bzip2?::bbool file::bstring)
       (open-output-bzip2-file file-name::bstring
-           #!optional (bufinfo #t)))
+           #!optional (bufinfo #t))
+      (open-input-bzip2-port in::input-port #!optional (bufinfo #t))
+      (open-output-bzip2-port out::output-port #!optional (bufinfo #t)))
    )
 
 
@@ -68,7 +70,8 @@
 
 (cond-expand
    (bigloo-c
-    (define (output-port->bzip2-port::output-port port::output-port)
+    (define (output-port->bzip2-port::output-port port::output-port
+               #!optional (bufinfo #t))
        (let* ((stream ($bgl-bzip2-create-compress-stream 9 port))
              (writeproc (lambda (s)
                            ($bgl-bzip2-stream-compress stream s (string-length s) #f)))
@@ -76,10 +79,11 @@
                        ($bgl-bzip2-stream-compress stream "" 0 #t)
                        ($bgl-bzip2-close-compress-stream stream)
                        #t))
-             (bzip2-port (open-output-procedure writeproc (lambda () #f) #t close)))       
+             (bzip2-port (open-output-procedure writeproc (lambda () #f) bufinfo close)))       
          bzip2-port)))
    (bigloo-jvm
-    (define (output-port->bzip2-port::output-port port::output-port)
+    (define (output-port->bzip2-port::output-port port::output-port
+               #!optional (bufinfo #t))
          (let* ((output-port-stream ($output-port-stream-create port))
                 (stream ($bzip2-output-stream-create output-port-stream))
                 (writeproc (lambda (s)
@@ -88,7 +92,7 @@
                           ($output-stream-close stream)
                           #t))
                 (bzip2-port (open-output-procedure writeproc
-                            (lambda () #f) #t close)))
+                            (lambda () #f) bufinfo close)))
             bzip2-port))))
 
 
@@ -159,7 +163,7 @@
 
 (define (open-output-bzip2-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out (open-output-file file-name bufinfo)))
+   (let ((out::output-port (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->bzip2-port out)))
              (output-port-close-hook-set! output-port
@@ -187,3 +191,11 @@
                            (begin (read-byte input)
                                   #t)
                            (close-input-port input))))))
+
+(define (open-input-bzip2-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-bzip2-port" bufinfo c-default-io-bufsiz)))
+      (input-port->bzip2-port in buf)))
+
+(define (open-output-bzip2-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-bzip2-port" bufinfo c-default-io-bufsiz)))
+      (output-port->bzip2-port out buf)))

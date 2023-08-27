@@ -26,11 +26,11 @@
    (test "gzip compressing and decompressing returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->gzip-port out-string)))
+            (output (open-output-gzip-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->gzip-port (open-input-string compressed-data))))
+               (input (open-input-gzip-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -47,11 +47,11 @@
    (test "deflating and inflating returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->deflate-port out-string)))
+            (output (open-output-deflate-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->inflate-port (open-input-string compressed-data))))
+               (input (open-input-inflate-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -68,11 +68,11 @@
    (test "zlib compressing and decompressing returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->zlib-port out-string)))
+            (output (open-output-zlib-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->zlib-port (open-input-string compressed-data))))
+               (input (open-input-zlib-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -95,11 +95,11 @@
    (test "bzip2 compressing and decompressing returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->bzip2-port out-string)))
+            (output (open-output-bzip2-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->bzip2-port (open-input-string compressed-data))))
+               (input (open-input-bzip2-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -120,11 +120,11 @@
    (test "zstd compressing and decompressing returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->zstd-port out-string)))
+            (output (open-output-zstd-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->zstd-port (open-input-string compressed-data))))
+               (input (open-input-zstd-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -144,11 +144,11 @@
    (test "xz compressing and decompressing returns orginal value"
       (let* ((test-string "a string to compress yay yay yay")
             (out-string (open-output-string))
-            (output (output-port->xz-port out-string)))
+            (output (open-output-xz-port out-string)))
          (display test-string output)
          (close-output-port output)
          (let* ((compressed-data (get-output-string out-string))
-               (input (input-port->xz-port (open-input-string compressed-data))))
+               (input (open-input-xz-port (open-input-string compressed-data))))
             (assert-equal? (read-string input) test-string)
             (close-input-port input))))
    
@@ -159,14 +159,48 @@
          (close-input-port input))))
 
 
+(define-test-suite lz4-suite
+
+   (test "file-lz4? works"
+      (assert-true (file-lz4? "test_files/orgs.csv.lz4"))
+      (assert-false (file-lz4? "test_files/orgs.csv.gz")))
+
+   
+   (test "lz4 compressing and decompressing returns orginal value"
+      (let* ((test-string "a string to compress yay yay yay")
+            (out-string (open-output-string))
+            (output (open-output-lz4-port out-string #t)))
+         (display test-string output)
+         (close-output-port output)
+         (let* ((compressed-data (get-output-string out-string))
+               (input (open-input-lz4-port (open-input-string compressed-data))))
+            (assert-equal? (read-string input) test-string)
+            (close-input-port input))))
+   
+   (test "input from lz4 file works"
+      (let* ((input (open-input-lz4-file "test_files/orgs.csv.lz4"))
+             (last-line (read-last-line input)))
+         (assert-equal? last-line +org-csv-last-line+)
+         (close-input-port input))))
+
+
 (suite-add-subsuite! compressed-ports-suite zlib-suite)
 (suite-add-subsuite! compressed-ports-suite bzip2-suite)
 (suite-add-subsuite! compressed-ports-suite zstd-suite)
 (suite-add-subsuite! compressed-ports-suite xz-suite)
+(suite-add-subsuite! compressed-ports-suite lz4-suite)
 
 (define (main args)
 
-   (let ((tr (instantiate::terminal-test-runner (suite compressed-ports-suite))))
-      (test-runner-execute tr #t)))
+   ; (let ((out (open-output-lz4-file "test.lz4")))
+   ;    (do ((i 0 (+ i 1)))
+   ;        ((= i 1000000))
+   ;        (fprint out "a string to compress yay yay yay"))
+   ;    (close-output-port out))
+   
+    (let ((tr (instantiate::terminal-test-runner (suite compressed-ports-suite))))
+       (test-runner-execute tr #t))
+
+    )
 
 

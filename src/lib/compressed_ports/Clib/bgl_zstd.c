@@ -10,7 +10,7 @@ static obj_t DECOMPRESS_DONE = BUNSPEC;
 struct zstd_decompress_stream {
   ZSTD_DCtx* dctx;
   ZSTD_inBuffer input;
-  int length;
+  long length;
   unsigned char buffer[];
 };
 
@@ -18,7 +18,7 @@ struct zstd_compress_stream {
   ZSTD_CCtx* cctx;
   ZSTD_inBuffer input;
   obj_t output;
-  int length;
+  long length;
   unsigned char buffer[];
 
 };

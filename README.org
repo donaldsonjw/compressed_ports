@@ -3,7 +3,7 @@
 
 ** Description
   compressed_ports is a Bigloo library supporting compressed input and
-  output ports. It currentlys supports [[https://www.gnu.org/software/gzip/][gzip]], [[https://sourceware.org/bzip2/][bzip2]], [[https://tukaani.org/xz/][xz]], and [[https://github.com/facebook/zstd][zstd]]. Both the
+  output ports. It currentlys supports [[https://www.gnu.org/software/gzip/][gzip]], [[https://sourceware.org/bzip2/][bzip2]], [[https://tukaani.org/xz/][xz]], [[https://lz4.org/][lz4]], and [[https://github.com/facebook/zstd][zstd]]. Both the
   Bigloo native and jvm backends are supported. It requires a recent
   version of [[https://github.com/manuel-serrano/bigloo][Bigloo]].
 
@@ -44,5 +44,15 @@ To run the tests, execute:
 
 
 * Documentation
-  There is very little documentation outside of the code
-  itself. Better documentation is in the works. 
+  The api mirrors what is provided for gzip and deflate in Bigloo's
+  standard library with the notable addition of supporting both input
+  from and output to compressed ports. The supported compression
+  algorithms are gzip, deflate, zlib, bzip2, xz, lz4, and zstd.
+
+** gzip
+  + ~*open-input-gzip-file*~ ~filename~ ~[buffer #t]~
+  + ~*open-input-gzip-port*~ ~input-port~ ~[buffer #t]~
+    Respectively, open a gzipped file or input-port. Note that closing
+    a ~gzip-port~ opened from a port ~pi~ does not close the ~pi~ port.  
+
+    

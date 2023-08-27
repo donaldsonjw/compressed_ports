@@ -49,9 +49,9 @@
          #!optional (bufinfo #t))
       (input-port->inflate-port::input-port port::input-port
          #!optional (bufinfo #t))
-      (output-port->zlib-port::output-port port::output-port)
-      (output-port->gzip-port::output-port port::output-port)
-      (output-port->deflate-port::output-port port::output-port)
+      (output-port->zlib-port::output-port port::output-port #!optional (bufinfo #t))
+      (output-port->gzip-port::output-port port::output-port #!optional (bufinfo #t))
+      (output-port->deflate-port::output-port port::output-port  #!optional (bufinfo #t))
       (open-input-gzip-file file-name::bstring
          #!optional (bufinfo #t) (timeout 1000000))
       (open-input-inflate-file file-name::bstring
@@ -63,7 +63,13 @@
       (open-output-zlib-file file-name::bstring #!optional (bufinfo #t))
       (file-gzip?::bbool file::bstring)
       (file-deflate?::bbool file::bstring)
-      (file-zlib?::bbool file::bstring)))
+      (file-zlib?::bbool file::bstring)
+      (open-input-gzip-port in::input-port #!optional (bufinfo #t))
+      (open-input-zlib-port in::input-port #!optional (bufinfo #t))
+      (open-input-inflate-port in::input-port #!optional (bufinfo #t))
+      (open-output-gzip-port out::output-port #!optional (bufinfo #t))
+      (open-output-zlib-port out::output-port #!optional (bufinfo #t))
+      (open-output-deflate-port out::output-port #!optional (bufinfo #t))))
 
 
 (define +zlib-compressed-formats+ '(GZIP ZLIB DEFLATE))
@@ -160,20 +166,20 @@
            #!optional (bufinfo #t))
    (%input-port->zlib-port port 'DEFLATE bufinfo))
 
-(define (output-port->gzip-port::output-port port::output-port)
-   (%output-port->zlib-port port 'GZIP))
+(define (output-port->gzip-port::output-port port::output-port #!optional (bufinfo #t))
+   (%output-port->zlib-port port 'GZIP bufinfo))
 
-(define (output-port->zlib-port::output-port port::output-port)
-   (%output-port->zlib-port port 'ZLIB))
+(define (output-port->zlib-port::output-port port::output-port #!optional (bufinfo #t))
+   (%output-port->zlib-port port 'ZLIB bufinfo))
 
-(define (output-port->deflate-port::output-port port::output-port)
-   (%output-port->zlib-port port 'DEFLATE))
+(define (output-port->deflate-port::output-port port::output-port  #!optional (bufinfo #t))
+   (%output-port->zlib-port port 'DEFLATE bufinfo))
 
 
 (cond-expand
    (bigloo-c
     (define (%output-port->zlib-port::output-port
-               port::output-port zlib-format::symbol)  
+               port::output-port zlib-format::symbol #!optional (bufinfo #t))  
        (let* ((stream ($bgl-zlib-create-deflate-stream 9 zlib-format port))
               (writeproc (lambda (s)
                             ($bgl-zlib-stream-deflate stream s (string-length s)
@@ -182,11 +188,11 @@
                         ($bgl-zlib-stream-deflate stream "" 0 #t)
                         ($bgl-zlib-close-compress-stream stream)
                         #t))
-              (zlib-port (open-output-procedure writeproc (lambda () #f) #t close)))       
+              (zlib-port (open-output-procedure writeproc (lambda () #f) bufinfo close)))       
           zlib-port)))
    (bigloo-jvm
     (define (%output-port->zlib-port::output-port
-               port::output-port zlib-format::symbol) 
+               port::output-port zlib-format::symbol #!optional (bufinfo #t)) 
        (let* ((output-port-stream ($output-port-stream-create port))
               (stream (if (eq? zlib-format 'GZIP) 
                           ($gzip-output-stream-create output-port-stream)
@@ -197,7 +203,7 @@
               (close (lambda ()
                         ($output-stream-close stream)
                         #t))
-              (zlib-port (open-output-procedure writeproc (lambda () #f) #t close)))
+              (zlib-port (open-output-procedure writeproc (lambda () #f) bufinfo close)))
           zlib-port))))
 
 
@@ -235,7 +241,7 @@
 
 (define (%open-output-zlib-file file-name::bstring zlib-format::symbol 
            #!optional (bufinfo #t))
-   (let ((out (open-output-file file-name)))
+   (let ((out::output-port (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (case zlib-format 
                                ((GZIP)
@@ -291,6 +297,29 @@
                                   #t)
                            (close-input-port input))))))
 
+(define (open-input-gzip-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-gzip-port" bufinfo c-default-io-bufsiz)))
+      (input-port->gzip-port in buf)))
+
+(define (open-input-zlib-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-zlib-port" bufinfo c-default-io-bufsiz)))
+      (input-port->zlib-port in buf)))
+
+(define (open-input-inflate-port in::input-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-input-inflate-port" bufinfo c-default-io-bufsiz)))
+      (input-port->inflate-port in buf)))
+
+(define (open-output-gzip-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-gzip-port" bufinfo c-default-io-bufsiz)))
+      (output-port->gzip-port out buf)))
+
+(define (open-output-zlib-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-zlib-port" bufinfo c-default-io-bufsiz)))
+      (output-port->zlib-port out buf)))
+
+(define (open-output-deflate-port out::output-port #!optional (bufinfo #t))
+   (let ((buf (get-port-buffer "open-output-deflate-port" bufinfo c-default-io-bufsiz)))
+      (output-port->deflate-port out buf)))
 
 
 

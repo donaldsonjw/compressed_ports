@@ -16,4 +16,5 @@ Copyright 2023, Joseph Donaldson
    (set! *additional-bigloo-zips* (cons* "zstd-jni-1.5.5-4.jar"
                                      "xz-1.9.jar"
                                      "bzip2-0.9.1.jar"
+                                     "lz4-pure-java-1.8.0.jar"
                                      *additional-bigloo-zips*))))
