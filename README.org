@@ -18,11 +18,11 @@
   prefix (e.g, =/usr/local=). You usually want the path prefix to match
   that used by Bigloo itself.
 
-  To build native support, you need the zstd, xz, and zlib
+  To build native support, you need the bzip2, zstd, xz, lz4, and zlib
   libraries and development files installed.
   
-  To build jvm support, you need [[https://maven.apache.org/][Maven]] installed to pull the xz and
-  zstd jars. Luckily, Gzip support is a part of the Java standard
+  To build jvm support, you need [[https://maven.apache.org/][Maven]] installed to pull the bzip2, zstd, xz and
+  lz4 jars. Luckily, Gzip support is a part of the Java standard
   library.
   
 * Installation
@@ -48,11 +48,132 @@ To run the tests, execute:
   standard library with the notable addition of supporting both input
   from and output to compressed ports. The supported compression
   algorithms are gzip, deflate, zlib, bzip2, xz, lz4, and zstd.
+ 
+  For each supported compression type, there are procedures for
+  opening an input or output file/port. Predicates for evaluating
+  whether a given file is compressed with a specific compression
+  method are also available.   
 
 ** gzip
-  + ~*open-input-gzip-file*~ ~filename~ ~[buffer #t]~
-  + ~*open-input-gzip-port*~ ~input-port~ ~[buffer #t]~
-    Respectively, open a gzipped file or input-port. Note that closing
-    a ~gzip-port~ opened from a port ~pi~ does not close the ~pi~ port.  
+  *open-input-gzip-file* filename [buffer #t] \\ 
+  *open-input-gzip-port* input-port [buffer #t] 
 
+  Open a gzipped file or ~input-port~. Note that closing
+  a ~gzip-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-gzip-file* filename [bufinfo #t] \\
+  *open-output-gzip-port* port [bufinfo #t]
+
+  Open a gzipped file or ~output-port~. Note that closing a ~gzip-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-gzip?* file-name
+
+  Return whether or not the given file is gzipped or not.
+  
+** deflate
+  *open-input-inflate-file* filename [buffer #t] \\ 
+  *open-input-inflate-port* input-port [buffer #t] 
+
+  Open a deflated file or ~input-port~. Note that closing
+  a ~inflate-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-deflate-file* filename [bufinfo #t] \\
+  *open-output-deflate-port* port [bufinfo #t]
+
+  Open a deflated file or ~output-port~. Note that closing a ~deflate-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-deflate?* file-name
+
+  Return whether or not the given file is dflateded or not.
+  
+** zlib
+  *open-input-zlib-file* filename [buffer #t] \\ 
+  *open-input-zlib-port* input-port [buffer #t] 
+
+  Open a zlibbed file or ~input-port~. Note that closing
+  a ~zlib-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-zlib-file* filename [bufinfo #t] \\
+  *open-output-zlib-port* port [bufinfo #t]
+
+  Open a zlibbed file or ~output-port~. Note that closing a ~zlib-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-zlib?* file-name
+
+  Return whether or not the given file is zlibbed or not.
+  
+** bzip2
+  *open-input-bzip2-file* filename [buffer #t] \\ 
+  *open-input-bzip2-port* input-port [buffer #t] 
+
+  Open a bzipped file or ~input-port~. Note that closing
+  a ~bzip2-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-bzip2-file* filename [bufinfo #t] \\
+  *open-output-bzip2-port* port [bufinfo #t]
+
+  Open a bzipped file or ~output-port~. Note that closing a ~bzip2-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-bzip2?* file-name
+
+  Return whether or not the given file is bzipped or not.
+  
+** xz
+  *open-input-xz-file* filename [buffer #t] \\ 
+  *open-input-xz-port* input-port [buffer #t] 
+
+  Open a xzed file or ~input-port~. Note that closing
+  a ~xz-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-xz-file* filename [bufinfo #t] \\
+  *open-output-xz-port* port [bufinfo #t]
+
+  Open a xzed file or ~output-port~. Note that closing a ~xz-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-xz?* file-name
+
+  Return whether or not the given file is xzed or not.
+  
+** lz4
+  *open-input-lz4-file* filename [buffer #t] \\ 
+  *open-input-lz4-port* input-port [buffer #t] 
+
+  Open a lz4ed file or ~input-port~. Note that closing
+  a ~xz-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-lz4-file* filename [bufinfo #t] \\
+  *open-output-lz4-port* port [bufinfo #t]
+
+  Open a lz4ed file or ~output-port~. Note that closing a ~lz4-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-lz4?* file-name
+
+  Return whether or not the given file is lz4ed or not.
+  
+** zstd
+  *open-input-zstd-file* filename [buffer #t] \\ 
+  *open-input-zstd-port* input-port [buffer #t] 
+
+  Open a zstded file or ~input-port~. Note that closing
+  a ~zstd-port~ opened from a port ~input-port~ does not close the ~input-port~ port.
+
+  *open-output-zstd-file* filename [bufinfo #t] \\
+  *open-output-xztd-port* port [bufinfo #t]
+
+  Open a zstded file or ~output-port~. Note that closing a ~zstd-port~
+  opened from a port ~output-port~ does not close the ~output-port~ port.
+
+  *file-zstd?* file-name
+
+  Return whether or not the given file is zstded or not.
+
+
+  
     
+  
