@@ -72,7 +72,7 @@ ZIP_EXT = zip
 VARIANT_SUFFIXES:=s u p
 
 # BIGLOO compiler flags
-BFLAGS_COMMON = -O6 -q -afile $(AFILE) -mkaddlib -fsharing -freturn-goto -fstackable -jvm-catch-errors   
+BFLAGS_COMMON = -O6 -q -afile $(AFILE) -fsharing -freturn-goto -fstackable   
 BFLAGS_u = $(BFLAGS_COMMON) -unsafe -cgen
 BFLAGS_s = $(BFLAGS_COMMON)
 BFLAGS_p = $(BFLAGS_COMMON) -p
@@ -303,11 +303,11 @@ LIB_$2_BLDFLAGS_$1 += $$(BLDFLAGS_$1)
 
 .Olib_$1/lib/$2/%.o: $(SRC_DIR)/lib/$2/%.scm
 	@if [ ! -d "$$(@D)" ]; then  mkdir -p $$(@D); fi
-	$$(BIGLOO) $$(LIB_$2_BFLAGS_$1) $$(LIB_$2_BCFLAGS_$1:%=-copt %) $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$(LIB_$2_C_INCLUDE_DIRS:%=-copt " -I %") $$< -o $$@ -c
+	$$(BIGLOO) $$(LIB_$2_BFLAGS_$1) -mkaddlib $$(LIB_$2_BCFLAGS_$1:%=-copt %) $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$(LIB_$2_C_INCLUDE_DIRS:%=-copt " -I %") $$< -o $$@ -c
 
 .class_$1/bigloo/lib/$2/%.class: $(SRC_DIR)/lib/$2/%.scm
 	@if [ ! -d "$$(@D)" ]; then  mkdir -p $$(@D); fi
-	$$(BIGLOO) -jvm -jfile $(JFILE) $$(LIB_$2_BFLAGS_$1) $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$<  -o $$@ -c
+	$$(BIGLOO) -jvm -jfile $(JFILE) $$(LIB_$2_BFLAGS_$1) -mkaddlib $$(LIB_$2_BLFLAGS_$1) $$(LIB_$2_INCLUDE_FLAGS) $$<  -o $$@ -c
 endef
 
 define scm_bin_pattern_rules
