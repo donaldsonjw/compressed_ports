@@ -58,7 +58,10 @@
       (open-output-lz4-file file-name::bstring #!optional (bufinfo #t))
       (open-input-lz4-port::input-port in::input-port #!optional (bufinfo #t))
       (output-port->lz4-port::output-port port::output-port #!optional (bufinfo #t))
-      (open-output-lz4-port out::output-port #!optional (bufinfo #t))))
+      (open-output-lz4-port out::output-port #!optional (bufinfo #t)))
+
+   (option
+      (set! *inlining?* #f)))
 
 
 
@@ -159,7 +162,7 @@
 
 
 (define (open-output-lz4-file file-name::bstring #!optional (bufinfo #t))
-   (let ((out::output-port (open-output-file file-name bufinfo)))
+   (let ((out (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->lz4-port out)))
              (output-port-close-hook-set! output-port

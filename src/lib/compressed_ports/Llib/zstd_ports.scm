@@ -46,8 +46,7 @@
       (class $zstd-output-stream::$output-stream
          (constructor create (::$output-stream ::long))
          "com.github.luben.zstd.ZstdOutputStream"))
-   
-
+ 
    (export
       (input-port->zstd-port::input-port port::input-port
          #!optional (bufinfo #t))
@@ -58,7 +57,10 @@
            #!optional (bufinfo #t))
       (file-zstd?::bbool file::bstring)
       (open-input-zstd-port in::input-port #!optional (bufinfo #t))
-      (open-output-zstd-port out::output-port #!optional (bufinfo #t))))
+      (open-output-zstd-port out::output-port #!optional (bufinfo #t)))
+
+   (option
+      (set! *inlining?* #f)))
 
 ;; make sure we initialize zstd as a part of module initialization
 (cond-expand
@@ -172,7 +174,7 @@
 
 (define (open-output-zstd-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out::output-port (open-output-file file-name bufinfo)))
+   (let ((out (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->zstd-port out)))
              (output-port-close-hook-set! output-port

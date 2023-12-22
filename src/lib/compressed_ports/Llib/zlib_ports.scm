@@ -69,7 +69,10 @@
       (open-input-inflate-port in::input-port #!optional (bufinfo #t))
       (open-output-gzip-port out::output-port #!optional (bufinfo #t))
       (open-output-zlib-port out::output-port #!optional (bufinfo #t))
-      (open-output-deflate-port out::output-port #!optional (bufinfo #t))))
+      (open-output-deflate-port out::output-port #!optional (bufinfo #t)))
+
+   (option
+      (set! *inlining?* #f)))
 
 
 (define +zlib-compressed-formats+ '(GZIP ZLIB DEFLATE))
@@ -241,7 +244,7 @@
 
 (define (%open-output-zlib-file file-name::bstring zlib-format::symbol 
            #!optional (bufinfo #t))
-   (let ((out::output-port (open-output-file file-name bufinfo)))
+   (let ((out (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (case zlib-format 
                                ((GZIP)

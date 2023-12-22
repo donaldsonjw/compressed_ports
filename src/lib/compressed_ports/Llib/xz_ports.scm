@@ -62,7 +62,10 @@
            #!optional (bufinfo #t) (timeout 1000000))
       (file-xz?::bbool file::bstring)
       (open-input-xz-port in::input-port #!optional (bufinfo #t))
-      (open-output-xz-port out::output-port #!optional (bufinfo #t))))
+      (open-output-xz-port out::output-port #!optional (bufinfo #t)))
+
+   (option
+      (set! *inlining?* #f)))
 
 
 ;; make sure we initialize xz as a part of module initialization
@@ -166,7 +169,7 @@
 
 (define (open-output-xz-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out::output-port (open-output-file file-name bufinfo)))
+   (let ((out (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->xz-port out)))
              (output-port-close-hook-set! output-port

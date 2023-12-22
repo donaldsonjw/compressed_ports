@@ -58,6 +58,8 @@
            #!optional (bufinfo #t))
       (open-input-bzip2-port in::input-port #!optional (bufinfo #t))
       (open-output-bzip2-port out::output-port #!optional (bufinfo #t)))
+   (option
+      (set! *inlining?* #f))
    )
 
 
@@ -163,14 +165,12 @@
 
 (define (open-output-bzip2-file file-name::bstring
            #!optional (bufinfo #t))
-   (let ((out::output-port (open-output-file file-name bufinfo)))
+   (let ((out (open-output-file file-name bufinfo)))
       (if (output-port? out)
           (let ((output-port (output-port->bzip2-port out)))
              (output-port-close-hook-set! output-port
                 (lambda (p) (close-output-port out)))
              output-port))))
-
-
 
 (define (open-input-bzip2-file file-name::bstring
            #!optional (bufinfo #t) (timeout 1000000))
